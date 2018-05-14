@@ -59,6 +59,7 @@ module.exports = app;
 
 var users = [];
 var expenses = [];
+var groups = [];
 
 router.route('/expenses')   // operacoes sobre todos os users
   .get(function(req, res) {  // GET
@@ -80,10 +81,40 @@ router.route('/expenses')   // operacoes sobre todos os users
       }
    )
   .post(function(req, res) {   // POST
-      id = expenses.length;
-      expenses[id] = req.body;    // armazena em JSON
-      response = {"id": id};
-      res.json(response);
+      group_id = req.body["group_id"];
+      if (groups[group_id] != '{}') {
+
+        foundUsers = 0;
+        pagou = req.body["pagou"];
+
+        for (var i = 0; i<groups[group_id].members.length; i++) {
+          if (pagou==groups[group_id].members[i]) {
+            foundUsers++;
+            break;
+          }
+        }
+        var paraQuem = [];
+        paraQuem = req.body["paraQuem"];
+        for (var j = 0; j<paraQuem.length; j++) {
+          for (var i = 0; i<groups[group_id].members.length; i++) {
+            if (paraQuem[j]==groups[group_id].members[i]) {
+              foundUsers++;
+              break;
+            }
+          }
+        }
+        if (foundUsers==paraQuem.length+1) {
+          id = expenses.length;
+          expenses[id] = req.body;    // armazena em JSON
+          response = {"id": id};
+          res.json(response);
+        } else {
+          res.send("Algum usuario nao foi encontrado ou nao faz parte do grupo.");
+        }
+      } else {
+        res.send("GroupID nao foi encontrado");
+      }
+
     }
  );
 
@@ -117,7 +148,82 @@ router.route('/expenses/:id')   // operacoes sobre um aluno (ID)
     }
   );
 
-  router.route('/users')   // operacoes sobre todos os users
+
+router.route('/groups')   // operacoes sobre todos os users
+    .get(function(req, res) {  // GET
+        if (groups.length == 0) {
+         res.json({"groups": []});
+         return;
+        }
+        var response = '{"groups": [';
+        var group;
+        for (var i = 0; i < groups.length; i++) {
+           group = JSON.stringify(groups[i]);   // JSON -> string
+           if (group != '{}')   // deletado ?
+              response = response + group + ',';
+        }
+        if (response[response.length-1] == ',')
+           response = response.substr(0, response.length-1);  // remove ultima ,
+        response = response + ']}';  // fecha array
+        res.send(response);
+        }
+     )
+    .post(function(req, res) {   // POST
+        id = groups.length;
+        var members = [];
+        members = req.body['members'];
+        usersFound = 0;
+        for (var j = 0; j < members.length; j++) {
+          for (var i = 0; i < users.length; i++){
+            if (members[j] == users[i].email){
+              usersFound++;
+              break;
+            }
+          }
+        }
+
+        if (usersFound == members.length){
+          groups[id] = req.body;    // armazena em JSON
+          response = {"id": id};
+          res.json(response);
+        } else{
+          res.send("Alguns dos usuários não é cadastrado");
+        }
+      }
+   );
+
+  router.route('/groups/:id')   // operacoes sobre um aluno (ID)
+    .get(function(req, res) {   // GET
+        response = '{}';
+        id = parseInt(req.params.id);
+        if(groups.length > id)
+          response = JSON.stringify(groups[id]);
+        res.send(response);
+        }
+    )
+    .put(function(req, res) {   // PUT (altera)
+        response = {"updated": "false"};
+        id = parseInt(req.params.id);
+        if(groups.length > id) {
+           groups[id] = req.body;
+           response = {"updated": "true"};
+        }
+        res.json(response);
+      }
+    )
+    .delete(function(req, res) {   // DELETE (remove)
+        response = {"deleted": "false"};
+        id = parseInt(req.params.id);
+        if(groups.length > id && JSON.stringify(groups[id]) != '{}') {
+           groups[id] = {};
+           response = {"deleted": "true"};
+        }
+        res.json(response);
+      }
+    );
+
+
+router.route('/users')   // operacoes sobre todos os users
     .get(function(req, res) {  // GET
         if (users.length == 0) {
          res.json({"users": []});
@@ -149,6 +255,7 @@ router.route('/expenses/:id')   // operacoes sobre um aluno (ID)
         if (userFound == 0){
           users[id] = req.body;    // armazena em JSON
           response = {"id": id};
+          console.log(response);
           res.json(response);
         } else{
           res.send("Usuário já cadastrado!");
