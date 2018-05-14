@@ -85,14 +85,18 @@ router.route('/expenses')   // operacoes sobre todos os users
       if (groups[group_id] != '{}') {
 
         foundUsers = 0;
+        var pagou = [];
         pagou = req.body["pagou"];
 
-        for (var i = 0; i<groups[group_id].members.length; i++) {
-          if (pagou==groups[group_id].members[i]) {
-            foundUsers++;
-            break;
+        for (var j = 0; j<pagou.length; j++) {
+          for (var i = 0; i<groups[group_id].members.length; i++) {
+            if (pagou[j]==groups[group_id].members[i]) {
+              foundUsers++;
+              break;
+            }
           }
         }
+
         var paraQuem = [];
         paraQuem = req.body["paraQuem"];
         for (var j = 0; j<paraQuem.length; j++) {
@@ -103,7 +107,7 @@ router.route('/expenses')   // operacoes sobre todos os users
             }
           }
         }
-        if (foundUsers==paraQuem.length+1) {
+        if (foundUsers==paraQuem.length+pagou.length) {
           id = expenses.length;
           expenses[id] = req.body;    // armazena em JSON
           response = {"id": id};
