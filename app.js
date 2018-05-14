@@ -61,6 +61,38 @@ var users = [];
 var expenses = [];
 var groups = [];
 
+function verifyGroupMembers(usr,group_id){
+  var foundUsers = 0;
+  for (var j = 0; j<pagou.length; j++) {
+    for (var i = 0; i<groups[group_id].members.length; i++) {
+      if (pagou[j]==groups[group_id].members[i]) {
+        foundUsers++;
+        break;
+      }
+    }
+  }
+  if(foundUsers == usr.length)
+    return 1;
+  else
+    return 0;
+}
+
+function verifyUsers(usr){
+  usersFound = 0;
+  for (var j = 0; j < usr.length; j++) {
+    for (var i = 0; i < users.length; i++){
+      if (usr[j] == users[i].email){
+        usersFound++;
+        break;
+      }
+    }
+  }
+  if (usersFound == usr.length)
+    return 1;
+  else
+    return 0;
+}
+
 router.route('/expenses')   // operacoes sobre todos os users
   .get(function(req, res) {  // GET
       if (users.length == 0) {
@@ -83,31 +115,7 @@ router.route('/expenses')   // operacoes sobre todos os users
   .post(function(req, res) {   // POST
       group_id = req.body["group_id"];
       if (groups[group_id] != '{}') {
-
-        foundUsers = 0;
-        var pagou = [];
-        pagou = req.body["pagou"];
-
-        for (var j = 0; j<pagou.length; j++) {
-          for (var i = 0; i<groups[group_id].members.length; i++) {
-            if (pagou[j]==groups[group_id].members[i]) {
-              foundUsers++;
-              break;
-            }
-          }
-        }
-
-        var paraQuem = [];
-        paraQuem = req.body["paraQuem"];
-        for (var j = 0; j<paraQuem.length; j++) {
-          for (var i = 0; i<groups[group_id].members.length; i++) {
-            if (paraQuem[j]==groups[group_id].members[i]) {
-              foundUsers++;
-              break;
-            }
-          }
-        }
-        if (foundUsers==paraQuem.length+pagou.length) {
+        if (verifyGroupMembers(req.body["pagou"],group_id) && verifyGroupMembers(req.body["paraQuem"]),group_id) {
           id = expenses.length;
           expenses[id] = req.body;    // armazena em JSON
           response = {"id": id};
@@ -118,7 +126,6 @@ router.route('/expenses')   // operacoes sobre todos os users
       } else {
         res.send("GroupID nao foi encontrado");
       }
-
     }
  );
 
@@ -174,19 +181,8 @@ router.route('/groups')   // operacoes sobre todos os users
      )
     .post(function(req, res) {   // POST
         id = groups.length;
-        var members = [];
-        members = req.body['members'];
-        usersFound = 0;
-        for (var j = 0; j < members.length; j++) {
-          for (var i = 0; i < users.length; i++){
-            if (members[j] == users[i].email){
-              usersFound++;
-              break;
-            }
-          }
-        }
 
-        if (usersFound == members.length){
+        if (verifyUsers(req.body['members']) == 1){
           groups[id] = req.body;    // armazena em JSON
           response = {"id": id};
           res.json(response);
@@ -247,16 +243,9 @@ router.route('/users')   // operacoes sobre todos os users
         }
      )
     .post(function(req, res) {   // POST (cria)
-        userFound = 0;
         id = users.length;
-        email = req.body['email'];
-        for (var i = 0; i < users.length; i++){
-          if (email == users[i].email){
-            userFound = 1;
-            break;
-          }
-        }
-        if (userFound == 0){
+
+        if (verifyUsers(req.body['email']) == 0){
           users[id] = req.body;    // armazena em JSON
           response = {"id": id};
           console.log(response);
