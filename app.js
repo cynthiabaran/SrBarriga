@@ -58,19 +58,20 @@ module.exports = app;
 // HTTP GET, POST, PUT, DELETE
 
 var users = [];
+var expenses = [];
 
-router.route('/users')   // operacoes sobre todos os users
+router.route('/expenses')   // operacoes sobre todos os users
   .get(function(req, res) {  // GET
       if (users.length == 0) {
-       res.json({"users": []});
+       res.json({"expenses": []});
        return;
       }
-      var response = '{"users": [';
-      var aluno;
-      for (var i = 0; i < users.length; i++) {
-         aluno = JSON.stringify(users[i]);   // JSON -> string
-         if (aluno != '{}')   // deletado ?
-            response = response + aluno + ',';
+      var response = '{"expenses": [';
+      var expense;
+      for (var i = 0; i < expenses.length; i++) {
+         expense = JSON.stringify(expenses[i]);   // JSON -> string
+         if (expense != '{}')   // deletado ?
+            response = response + expense + ',';
       }
       if (response[response.length-1] == ',')
          response = response.substr(0, response.length-1);  // remove ultima ,
@@ -78,40 +79,28 @@ router.route('/users')   // operacoes sobre todos os users
       res.send(response);
       }
    )
-  .post(function(req, res) {   // POST (cria)
-      userFound = 0;
-      id = users.length;
-      email = req.body['email'];
-      for (var i = 0; i < users.length; i++){
-        if (email == users[i].email){
-          userFound = 1;
-          break;
-        }
-      }
-      if (userFound == 0){
-        users[id] = req.body;    // armazena em JSON
-        response = {"id": id};
-        res.json(response);
-      } else{
-        res.send("Usuário já cadastrado!");
-      }
+  .post(function(req, res) {   // POST
+      id = expenses.length;
+      expenses[id] = req.body;    // armazena em JSON
+      response = {"id": id};
+      res.json(response);
     }
  );
 
-router.route('/users/:id')   // operacoes sobre um aluno (ID)
+router.route('/expenses/:id')   // operacoes sobre um aluno (ID)
   .get(function(req, res) {   // GET
       response = '{}';
       id = parseInt(req.params.id);
-      if(users.length > id)
-        response = JSON.stringify(users[id]);
+      if(expenses.length > id)
+        response = JSON.stringify(expenses[id]);
       res.send(response);
       }
   )
   .put(function(req, res) {   // PUT (altera)
       response = {"updated": "false"};
       id = parseInt(req.params.id);
-      if(users.length > id) {
-         users[id] = req.body;
+      if(expenses.length > id) {
+         expenses[id] = req.body;
          response = {"updated": "true"};
       }
       res.json(response);
@@ -120,10 +109,79 @@ router.route('/users/:id')   // operacoes sobre um aluno (ID)
   .delete(function(req, res) {   // DELETE (remove)
       response = {"deleted": "false"};
       id = parseInt(req.params.id);
-      if(users.length > id && JSON.stringify(users[id]) != '{}') {
-         users[id] = {};
+      if(expenses.length > id && JSON.stringify(expenses[id]) != '{}') {
+         expenses[id] = {};
          response = {"deleted": "true"};
       }
       res.json(response);
     }
   );
+
+  router.route('/users')   // operacoes sobre todos os users
+    .get(function(req, res) {  // GET
+        if (users.length == 0) {
+         res.json({"users": []});
+         return;
+        }
+        var response = '{"users": [';
+        var aluno;
+        for (var i = 0; i < users.length; i++) {
+           aluno = JSON.stringify(users[i]);   // JSON -> string
+           if (aluno != '{}')   // deletado ?
+              response = response + aluno + ',';
+        }
+        if (response[response.length-1] == ',')
+           response = response.substr(0, response.length-1);  // remove ultima ,
+        response = response + ']}';  // fecha array
+        res.send(response);
+        }
+     )
+    .post(function(req, res) {   // POST (cria)
+        userFound = 0;
+        id = users.length;
+        email = req.body['email'];
+        for (var i = 0; i < users.length; i++){
+          if (email == users[i].email){
+            userFound = 1;
+            break;
+          }
+        }
+        if (userFound == 0){
+          users[id] = req.body;    // armazena em JSON
+          response = {"id": id};
+          res.json(response);
+        } else{
+          res.send("Usuário já cadastrado!");
+        }
+      }
+   );
+
+  router.route('/users/:id')   // operacoes sobre um aluno (ID)
+    .get(function(req, res) {   // GET
+        response = '{}';
+        id = parseInt(req.params.id);
+        if(users.length > id)
+          response = JSON.stringify(users[id]);
+        res.send(response);
+        }
+    )
+    .put(function(req, res) {   // PUT (altera)
+        response = {"updated": "false"};
+        id = parseInt(req.params.id);
+        if(users.length > id) {
+           users[id] = req.body;
+           response = {"updated": "true"};
+        }
+        res.json(response);
+      }
+    )
+    .delete(function(req, res) {   // DELETE (remove)
+        response = {"deleted": "false"};
+        id = parseInt(req.params.id);
+        if(users.length > id && JSON.stringify(users[id]) != '{}') {
+           users[id] = {};
+           response = {"deleted": "true"};
+        }
+        res.json(response);
+      }
+    );
