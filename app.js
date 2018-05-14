@@ -66,18 +66,37 @@ router.route('/users')   // operacoes sobre todos os users
        return;
       }
       var response = '{"users": [';
-      var aluno;
+      userFound = 0;
+      userPassValid = 0;
+      var userID;
       for (var i = 0; i < users.length; i++) {
-         aluno = JSON.stringify(users[i]);   // JSON -> string
-         if (aluno != '{}')   // deletado ?
-            response = response + aluno + ',';
+        console.log("%s %s\n",users[i].email,req.body['email']);
+        if(req.body['email'] == users[i].email){
+          userFound = 1;
+          if(req.body['password'] == users[i].password){
+            userID = i;
+            userPassValid = 1;
+          }
+          break;
+        }
       }
-      if (response[response.length-1] == ',')
-         response = response.substr(0, response.length-1);  // remove ultima ,
-      response = response + ']}';  // fecha array
-      res.send(response);
+        if(userFound == 1){
+          if(userPassValid == 1){
+            aluno = JSON.stringify(users[userID]);   // JSON -> string
+            if (aluno != '{}')   // deletado ?
+               response = response + aluno + ',';
+               if (response[response.length-1] == ',')
+                  response = response.substr(0, response.length-1);  // remove ultima ,
+               response = response + ']}';  // fecha array
+               res.send(response);
+          }else{
+            res.send("Senha errada!");
+          }
+        }else{
+          res.send("Usuário não encontrado!");
+        }
       }
-   )
+  )
   .post(function(req, res) {   // POST (cria)
       userFound = 0;
       id = users.length;
@@ -98,32 +117,33 @@ router.route('/users')   // operacoes sobre todos os users
     }
  );
 
-router.route('/users/:id')   // operacoes sobre um aluno (ID)
-  .get(function(req, res) {   // GET
-      response = '{}';
-      id = parseInt(req.params.id);
-      if(users.length > id)
-        response = JSON.stringify(users[id]);
-      res.send(response);
-      }
-  )
-  .put(function(req, res) {   // PUT (altera)
-      response = {"updated": "false"};
-      id = parseInt(req.params.id);
-      if(users.length > id) {
-         users[id] = req.body;
-         response = {"updated": "true"};
-      }
-      res.json(response);
-    }
-  )
-  .delete(function(req, res) {   // DELETE (remove)
-      response = {"deleted": "false"};
-      id = parseInt(req.params.id);
-      if(users.length > id && JSON.stringify(users[id]) != '{}') {
-         users[id] = {};
-         response = {"deleted": "true"};
-      }
-      res.json(response);
-    }
-  );
+// router.route('/users/:id')   // operacoes sobre um aluno (ID)
+//   .get(function(req, res) {   // GET
+//       response = '{}';
+//       id = parseInt(req.params.id);
+//       if(users.length > id)
+//         response = JSON.stringify(users[id]);
+//       res.send(response);
+//       }
+//   )
+//
+  // .put(function(req, res) {   // PUT (altera)
+  //     response = {"updated": "false"};
+  //     id = parseInt(req.params.id);
+  //     if(users.length > id) {
+  //        users[id] = req.body;
+  //        response = {"updated": "true"};
+  //     }
+  //     res.json(response);
+  //   }
+  // )
+  // .delete(function(req, res) {   // DELETE (remove)
+  //     response = {"deleted": "false"};
+  //     id = parseInt(req.params.id);
+  //     if(users.length > id && JSON.stringify(users[id]) != '{}') {
+  //        users[id] = {};
+  //        response = {"deleted": "true"};
+  //     }
+  //     res.json(response);
+  //   }
+  //);

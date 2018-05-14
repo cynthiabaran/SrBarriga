@@ -11,14 +11,14 @@
   <form>
     URL do Recurso: <input type="text" ng-model="recurso"><br><br>
     Repr. do Recurso: <input type="text" ng-model="repr"><br><br>
-    Metodo HTTP: &nbsp; 
+    Metodo HTTP: &nbsp;
     <button ng-click="doGet()">GET</button> &nbsp;
     <button ng-click="doPost()">POST</button> &nbsp;
     <button ng-click="doPut()">PUT</button> &nbsp;
     <button ng-click="doDelete()">DELETE</button> <br><br><br>
   </form>
     <b>Retorno:</b><br><br>
-    Codigo HTTP: {{codigo}} 
+    Codigo HTTP: {{codigo}}
     <br><br>
     Payload: {{payload}}
 </div>
@@ -34,7 +34,8 @@ app.controller('myCtrl', function($scope, $http) {
      var data = $scope.repr;
      var request = $http({
                  "method": "get",
-                 "url": url});
+                 "url": url,
+                 "data": data});
      request.success(function(reply, status) {
         $scope.codigo = status;
         $scope.payload = reply;
@@ -114,8 +115,7 @@ app.controller('myCtrl', function($scope, $http) {
     }
   }
 );
-</script> 
+</script>
 
 </body>
 </html>
-
