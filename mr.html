@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<body>
+
+<h2>Manipulador de Recursos</h2>
+
+<br>
+
+<div ng-app="myApp" ng-controller="myCtrl">
+  <form>
+    URL do Recurso: <input type="text" ng-model="recurso"><br><br>
+    Repr. do Recurso: <input type="text" ng-model="repr"><br><br>
+    Metodo HTTP: &nbsp; 
+    <button ng-click="doGet()">GET</button> &nbsp;
+    <button ng-click="doPost()">POST</button> &nbsp;
+    <button ng-click="doPut()">PUT</button> &nbsp;
+    <button ng-click="doDelete()">DELETE</button> <br><br><br>
+  </form>
+    <b>Retorno:</b><br><br>
+    Codigo HTTP: {{codigo}} 
+    <br><br>
+    Payload: {{payload}}
+</div>
+
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope, $http) {
+  // GET
+  $scope.doGet = function() {
+     $scope.clear();
+     var url = $scope.recurso;
+     var data = $scope.repr;
+     var request = $http({
+                 "method": "get",
+                 "url": url});
+     request.success(function(reply, status) {
+        $scope.codigo = status;
+        $scope.payload = reply;
+        }
+     );
+     request.error(function(reply, status) {
+        $scope.codigo = status;
+        $scope.payload = reply;
+       }
+    );
+  };
+
+  // POST
+  $scope.doPost = function() {
+     $scope.clear();
+     var url = $scope.recurso;
+     var data = $scope.repr;
+     var request = $http({
+                 "method": "post",
+                 "url": url,
+                 "data": data});
+     request.success(function(reply, status) {
+        $scope.codigo = status;
+        $scope.payload = reply;
+        }
+      );
+      request.error(function(reply, status) {
+        $scope.codigo = status;
+        $scope.payload = reply;
+      }
+    );
+  };
+
+  // PUT
+  $scope.doPut = function() {
+     $scope.clear();
+     var url = $scope.recurso;
+     var data = $scope.repr;
+     var request = $http({
+                 "method": "put",
+                 "url": url,
+                 "data": data});
+     request.success(function(reply, status) {
+        $scope.codigo = status;
+        $scope.payload = reply;
+        }
+      );
+      request.error(function(reply, status) {
+        $scope.codigo = status;
+        $scope.payload = reply;
+       }
+    );
+  };
+
+  // DELETE
+  $scope.doDelete = function() {
+     $scope.clear();
+     var url = $scope.recurso;
+     var request = $http({
+                 "method": "delete",
+                 "url": url});
+     request.success(function(reply, status) {
+        $scope.codigo = status;
+        $scope.payload = reply;
+       }
+     );
+     request.error(function(reply, status) {
+        $scope.codigo = status;
+       }
+     );
+   };
+
+  // CLEAR
+  $scope.clear = function() {
+    $scope.codigo = "";
+    $scope.payload = "";
+    }
+  }
+);
+</script> 
+
+</body>
+</html>
+
