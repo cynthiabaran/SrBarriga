@@ -8,7 +8,9 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 // adicione "ponteiro" para o MongoDB
-var mongoOp = require('./models/mongo');
+var usersDB = require('./models/users');
+var spendingsDB = require('./models/spendings');
+var groupsDB = require('./models/groups');
 
 // comente as duas linhas abaixo
 // var index = require('./routes/index');
@@ -63,7 +65,7 @@ module.exports = app;
 // HTTP GET, POST, PUT, DELETE
 
 // index.html
-router.route('/') 
+router.route('/')
  .get(function(req, res) {  // GET
    var path = 'index.hatml';
    res.header('Cache-Control', 'no-cache');
@@ -71,14 +73,14 @@ router.route('/')
    }
  );
 
-router.route('/alunos')   // operacoes sobre todos os alunos
+router.route('/users')   // operacoes sobre todos os alunos
  .get(function(req, res) {  // GET
      var response = {};
-     mongoOp.find({}, function(erro, data) {
+     usersDB.find({}, function(erro, data) {
        if(erro)
           response = {"resultado": "Falha de acesso ao BD"};
         else
-          response = {"alunos": data};
+          response = {"users": data};
           res.json(response);
         }
       )
@@ -86,26 +88,26 @@ router.route('/alunos')   // operacoes sobre todos os alunos
   )
   .post(function(req, res) {   // POST (cria)
      console.log(JSON.stringify(req.body));
-     var query = {"ra": req.body.ra};
+     var query = {"email": req.body.email};
      var response = {};
-     mongoOp.findOne(query, function(erro, data) {
+     usersDB.findOne(query, function(erro, data) {
         if (data == null) {
-           var db = new mongoOp();
-           db.ra = req.body.ra;
-           db.nome = req.body.nome;
-           db.curso = req.body.curso;
+           var db = new usersDB();
+           db.email = req.body.email;
+           db.name = req.body.name;
+           db.password = req.body.password;
            db.save(function(erro) {
              if(erro) {
                  response = {"resultado": "Falha de insercao no BD"};
                  res.json(response);
              } else {
-                 response = {"resultado": "Aluno inserido no BD"};
+                 response = {"resultado": "Usuario inserido no BD"};
                  res.json(response);
               }
             }
           )
         } else {
-	    response = {"resultado": "Aluno ja existente"};
+	    response = {"resultado": "Usuario ja existente"};
             res.json(response);
           }
         }
@@ -114,19 +116,19 @@ router.route('/alunos')   // operacoes sobre todos os alunos
   );
 
 
-router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
+router.route('/users/:email')
   .get(function(req, res) {   // GET
       var response = {};
-      var query = {"ra": req.params.ra};
-      mongoOp.findOne(query, function(erro, data) {
+      var query = {"email": req.params.email};
+      usersDB.findOne(query, function(erro, data) {
          if(erro) {
             response = {"resultado": "falha de acesso ao BD"};
             res.json(response);
          } else if (data == null) {
              response = {"resultado": "aluno inexistente"};
-             res.json(response);   
+             res.json(response);
 	 } else {
-	    response = {"alunos": [data]};
+	    response = {"users": [data]};
             res.json(response);
            }
         }
@@ -135,18 +137,18 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
   )
   .put(function(req, res) {   // PUT (altera)
       var response = {};
-      var query = {"ra": req.params.ra};
-      var data = {"nome": req.body.nome, "curso": req.body.curso};
-      mongoOp.findOneAndUpdate(query, data, function(erro, data) {
+      var query = {"email": req.params.email};
+      var data = {"name": req.body.name, "password": req.body.password};
+      usersDB.findOneAndUpdate(query, data, function(erro, data) {
           if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
-	  } else if (data == null) { 
-             response = {"resultado": "aluno inexistente"};
-             res.json(response);   
+	         } else if (data == null) {
+             response = {"resultado": "usuario inexistente"};
+             res.json(response);
           } else {
-             response = {"resultado": "aluno atualizado no BD"};
-             res.json(response);   
+             response = {"resultado": "usuario atualizado no BD"};
+             res.json(response);
 	  }
         }
       )
@@ -154,21 +156,19 @@ router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
   )
   .delete(function(req, res) {   // DELETE (remove)
      var response = {};
-     var query = {"ra": req.params.ra};
-      mongoOp.findOneAndRemove(query, function(erro, data) {
+     var query = {"email": req.params.email};
+      usersDB.findOneAndRemove(query, function(erro, data) {
          if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
-	 } else if (data == null) {	      
-             response = {"resultado": "aluno inexistente"};
+	 } else if (data == null) {
+             response = {"resultado": "usuario inexistente"};
              res.json(response);
             } else {
-              response = {"resultado": "aluno removido do BD"};
+              response = {"resultado": "usuario removido do BD"};
               res.json(response);
 	   }
          }
        )
      }
   );
-
-
