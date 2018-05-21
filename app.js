@@ -66,18 +66,18 @@ module.exports = app;
 
 // index.html
 router.route('/')
- .get(function(req, res) {  // GET
-   var path = 'index.hatml';
-   res.header('Cache-Control', 'no-cache');
-   res.sendfile(path, {"root": "./"});
-   }
- );
+  .get(function(req, res) {  // GET
+      var path = 'index.html';
+      res.header('Cache-Control', 'no-cache');
+      res.sendfile(path, {"root": "./"});
+    }
+  );
 
 router.route('/users')   // operacoes sobre todos os alunos
- .get(function(req, res) {  // GET
-     var response = {};
-     usersDB.find({}, function(erro, data) {
-       if(erro)
+  .get(function(req, res) {  // GET
+      var response = {};
+      usersDB.find({}, function(erro, data) {
+        if(erro)
           response = {"resultado": "Falha de acesso ao BD"};
         else
           response = {"users": data};
@@ -87,27 +87,27 @@ router.route('/users')   // operacoes sobre todos os alunos
     }
   )
   .post(function(req, res) {   // POST (cria)
-     console.log(JSON.stringify(req.body));
-     var query = {"email": req.body.email};
-     var response = {};
-     usersDB.findOne(query, function(erro, data) {
-        if (data == null) {
-           var db = new usersDB();
-           db.email = req.body.email;
-           db.name = req.body.name;
-           db.password = req.body.password;
-           db.save(function(erro) {
-             if(erro) {
-                 response = {"resultado": "Falha de insercao no BD"};
-                 res.json(response);
-             } else {
-                 response = {"resultado": "Usuario inserido no BD"};
-                 res.json(response);
+      console.log(JSON.stringify(req.body));
+      var query = {"email": req.body.email};
+      var response = {};
+      usersDB.findOne(query, function(erro, data) {
+          if (data == null) {
+            var db = new usersDB();
+            db.email = req.body.email;
+            db.name = req.body.name;
+            db.password = req.body.password;
+            db.save(function(erro) {
+                if(erro) {
+                  response = {"resultado": "Falha de insercao no BD"};
+                  res.json(response);
+                } else {
+                  response = {"resultado": "Usuario inserido no BD"};
+                  res.json(response);
+                }
               }
-            }
-          )
-        } else {
-	    response = {"resultado": "Usuario ja existente"};
+            )
+          } else {
+            response = {"resultado": "Usuario ja existente"};
             res.json(response);
           }
         }
@@ -118,19 +118,19 @@ router.route('/users')   // operacoes sobre todos os alunos
 
 router.route('/users/:email')
   .get(function(req, res) {   // GET
-      var response = {};
-      var query = {"email": req.params.email};
-      usersDB.findOne(query, function(erro, data) {
-         if(erro) {
+        var response = {};
+        var query = {"email": req.params.email};
+        usersDB.findOne(query, function(erro, data) {
+          if(erro) {
             response = {"resultado": "falha de acesso ao BD"};
             res.json(response);
-         } else if (data == null) {
-             response = {"resultado": "aluno inexistente"};
-             res.json(response);
-	 } else {
-	    response = {"users": [data]};
+          } else if (data == null) {
+            response = {"resultado": "aluno inexistente"};
             res.json(response);
-           }
+          } else {
+            response = {"users": [data]};
+            res.json(response);
+          }
         }
       )
     }
@@ -143,32 +143,245 @@ router.route('/users/:email')
           if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
-	         } else if (data == null) {
-             response = {"resultado": "usuario inexistente"};
-             res.json(response);
+          } else if (data == null) {
+            response = {"resultado": "usuario inexistente"};
+            res.json(response);
           } else {
-             response = {"resultado": "usuario atualizado no BD"};
-             res.json(response);
-	  }
+            response = {"resultado": "usuario atualizado no BD"};
+            res.json(response);
+          }
         }
       )
     }
   )
   .delete(function(req, res) {   // DELETE (remove)
-     var response = {};
-     var query = {"email": req.params.email};
+      var response = {};
+      var query = {"email": req.params.email};
       usersDB.findOneAndRemove(query, function(erro, data) {
-         if(erro) {
+          if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
-	 } else if (data == null) {
-             response = {"resultado": "usuario inexistente"};
-             res.json(response);
-            } else {
-              response = {"resultado": "usuario removido do BD"};
-              res.json(response);
-	   }
-         }
-       )
-     }
+          } else if (data == null) {
+            response = {"resultado": "usuario inexistente"};
+            res.json(response);
+          } else {
+            response = {"resultado": "usuario removido do BD"};
+            res.json(response);
+          }
+        }
+      )
+    }
   );
+
+router.route('/groups')   // operacoes sobre todos os alunos
+ .get(function(req, res) {  // GET
+     var response = {};
+     groupsDB.find({}, function(erro, data) {
+       if(erro)
+          response = {"resultado": "Falha de acesso ao BD"};
+        else
+          response = {"groups": data};
+          res.json(response);
+        }
+      )
+    }
+  )
+  .post(function(req, res) {   // POST (cria)
+      console.log(JSON.stringify(req.body));
+      var response = {};
+      var db = new groupsDB();
+      db.admin = req.body.admin;
+      db.nome = req.body.nome;
+      db.id = ObjectId();
+      db.membros = req.body.membros;
+
+      db.save(function(erro) {
+          if(erro) {
+            response = {"resultado": "Falha de insercao no BD"};
+            res.json(response);
+          } else {
+            response = {"resultado": "Grupo inserido no BD"};
+            res.json(response);
+          }
+        }
+      )
+    }
+  );
+
+router.route('/groups/:id')
+  .get(function(req, res) {   // GET
+      var response = {};
+      var query = {"id": req.params.id};
+      groupsDB.findOne(query, function(erro, data) {
+          if(erro) {
+            response = {"resultado": "falha de acesso ao BD"};
+            res.json(response);
+          } else if (data == null) {
+            response = {"resultado": "grupo inexistente"};
+            res.json(response);
+          } else {
+            response = {"grupo": [data]};
+            res.json(response);
+          }
+        }
+      )
+    }
+  )
+
+  .put(function(req, res) {   // PUT (altera)
+      var response = {};
+      var query = {"id": req.params.id};
+      var data = {"nome": req.body.name, "membros": req.body.membros, "admin": req.body.admin};
+      groupsDB.findOneAndUpdate(query, data, function(erro, data) {
+          if(erro) {
+            response = {"resultado": "falha de acesso ao DB"};
+            res.json(response);
+          } else if (data == null) {
+            response = {"resultado": "grupo inexistente"};
+            res.json(response);
+          } else {
+            response = {"resultado": "grupo atualizado no BD"};
+            res.json(response);
+          }
+        }
+      )
+    }
+  )
+  .delete(function(req, res) {   // DELETE (remove)
+      //Necessário remover as despesas do grupo também
+       var response = {};
+       var query = {"id": req.params.id};
+       groupsDB.findOneAndRemove(query, function(erro, data) {
+          if(erro) {
+            response = {"resultado": "falha de acesso ao DB"};
+            res.json(response);
+          } else if (data == null) {
+            response = {"resultado": "grupo inexistente"};
+            res.json(response);
+          } else {
+            response = {"resultado": "grupo removido do BD"};
+            res.json(response);
+          }
+        }
+      )
+    }
+  );
+
+
+router.route('/spendings/:groupID')
+  .get(function(req, res) {   // GET
+      var response = {};
+      var query = {"groupID": req.params.groupID};
+      spendingsDB.findOne(query, function(erro, data) {
+          if(erro) {
+            response = {"resultado": "falha de acesso ao BD"};
+            res.json(response);
+          } else if (data == null) {
+             response = {"resultado": "grupo sem despesas ou inexistente"};
+             res.json(response);
+          } else {
+            response = {"despesas": [data]};
+            res.json(response);
+          }
+        }
+      )
+    }
+  )
+  .post(function(req, res) {   // POST (cria)
+      console.log(JSON.stringify(req.body));
+      var response = {};
+      var db = new spendingsDB();
+      db.id = ObjectId();
+      db.data = db.id.getTimeStamp();
+      db.pagou = req.body.pagou;
+      db.valor = req.body.valor;
+      db.paraQuem = req.body.paraQuem;
+      db.groupID = req.params.groupID;
+
+      db.save(function(erro) {
+          if(erro) {
+            response = {"resultado": "Falha de insercao no BD"};
+            res.json(response);
+          } else {
+            response = {"resultado": "despesa inserido no BD"};
+            res.json(response);
+          }
+        }
+      )
+    }
+  )
+  .delete(function(req, res) {   // DELETE (remove)
+       var response = {};
+       var query = {"groupID": req.params.groupID};
+       spendingsDB.findOneAndRemove(query, function(erro, data) {
+          if(erro) {
+            response = {"resultado": "falha de acesso ao DB"};
+            res.json(response);
+          } else if (data == null) {
+            response = {"resultado": "despesas para o grupo inexistentes"};
+            res.json(response);
+          } else {
+            response = {"resultado": "despesas do grupo removidas do BD"};
+            res.json(response);
+          }
+        }
+      )
+    }
+  );
+
+  router.route('/spendings/:id')
+    .get(function(req, res) {   // GET
+        var response = {};
+        var query = {"id": req.params.id};
+        spendingsDB.findOne(query, function(erro, data) {
+            if(erro) {
+              response = {"resultado": "falha de acesso ao BD"};
+              res.json(response);
+            } else if (data == null) {
+               response = {"resultado": "despesa inexistente"};
+               res.json(response);
+            } else {
+              response = {"despesas": [data]};
+              res.json(response);
+            }
+          }
+        )
+      }
+    )
+    .put(function(req, res) {   // PUT (altera)
+        var response = {};
+        var query = {"id": req.params.id};
+        var data = {"valor": req.body.name, "paraQuem": req.body.paraQuem};
+        spendingsDB.findOneAndUpdate(query, data, function(erro, data) {
+            if(erro) {
+              response = {"resultado": "falha de acesso ao DB"};
+              res.json(response);
+            } else if (data == null) {
+              response = {"resultado": "despesa inexistente"};
+              res.json(response);
+            } else {
+              response = {"resultado": "despesa atualizada no BD"};
+              res.json(response);
+            }
+          }
+        )
+      }
+    )
+    .delete(function(req, res) {   // DELETE (remove)
+         var response = {};
+         var query = {"id": req.params.id};
+         spendingsDB.findOneAndRemove(query, function(erro, data) {
+            if(erro) {
+              response = {"resultado": "falha de acesso ao DB"};
+              res.json(response);
+            } else if (data == null) {
+              response = {"resultado": "despesas inexistente"};
+              res.json(response);
+            } else {
+              response = {"resultado": "despesas removida do BD"};
+              res.json(response);
+            }
+          }
+        )
+      }
+    );
