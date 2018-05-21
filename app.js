@@ -1,9 +1,14 @@
+// Servidor da aplicacao
+
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+
+// adicione "ponteiro" para o MongoDB
+var mongoOp = require('./models/mongo');
 
 // comente as duas linhas abaixo
 // var index = require('./routes/index');
@@ -57,231 +62,113 @@ module.exports = app;
 // codigo abaixo adicionado para o processamento das requisições
 // HTTP GET, POST, PUT, DELETE
 
-var users = [];
-var expenses = [];
-var groups = [];
-
-function verifyGroupMembers(usr,group_id){
-  var foundUsers = 0;
-  for (var j = 0; j<pagou.length; j++) {
-    for (var i = 0; i<groups[group_id].members.length; i++) {
-      if (pagou[j]==groups[group_id].members[i]) {
-        foundUsers++;
-        break;
-      }
-    }
-  }
-  if(foundUsers == usr.length)
-    return 1;
-  else
-    return 0;
-}
-
-function verifyUsers(usr){
-  usersFound = 0;
-  for (var j = 0; j < usr.length; j++) {
-    for (var i = 0; i < users.length; i++){
-      if (usr[j] == users[i].email){
-        usersFound++;
-        break;
-      }
-    }
-  }
-  if (usersFound == usr.length)
-    return 1;
-  else
-    return 0;
-}
-
-router.route('/expenses')   // operacoes sobre todos os users
-  .get(function(req, res) {  // GET
-      if (users.length == 0) {
-       res.json({"expenses": []});
-       return;
-      }
-      var response = '{"expenses": [';
-      var expense;
-      for (var i = 0; i < expenses.length; i++) {
-         expense = JSON.stringify(expenses[i]);   // JSON -> string
-         if (expense != '{}')   // deletado ?
-            response = response + expense + ',';
-      }
-      if (response[response.length-1] == ',')
-         response = response.substr(0, response.length-1);  // remove ultima ,
-      response = response + ']}';  // fecha array
-      res.send(response);
-      }
-   )
-  .post(function(req, res) {   // POST
-      group_id = req.body["group_id"];
-      if (groups[group_id] != '{}') {
-        if (verifyGroupMembers(req.body["pagou"],group_id) && verifyGroupMembers(req.body["paraQuem"]),group_id) {
-          id = expenses.length;
-          expenses[id] = req.body;    // armazena em JSON
-          response = {"id": id};
-          res.json(response);
-        } else {
-          res.send("Algum usuario nao foi encontrado ou nao faz parte do grupo.");
-        }
-      } else {
-        res.send("GroupID nao foi encontrado");
-      }
-    }
+// index.html
+router.route('/') 
+ .get(function(req, res) {  // GET
+   var path = 'index.hatml';
+   res.header('Cache-Control', 'no-cache');
+   res.sendfile(path, {"root": "./"});
+   }
  );
 
-router.route('/expenses/:id')   // operacoes sobre um aluno (ID)
-  .get(function(req, res) {   // GET
-      response = '{}';
-      id = parseInt(req.params.id);
-      if(expenses.length > id)
-        response = JSON.stringify(expenses[id]);
-      res.send(response);
-      }
-  )
-  .put(function(req, res) {   // PUT (altera)
-      response = {"updated": "false"};
-      id = parseInt(req.params.id);
-      if(expenses.length > id) {
-         expenses[id] = req.body;
-         response = {"updated": "true"};
-      }
-      res.json(response);
+router.route('/alunos')   // operacoes sobre todos os alunos
+ .get(function(req, res) {  // GET
+     var response = {};
+     mongoOp.find({}, function(erro, data) {
+       if(erro)
+          response = {"resultado": "Falha de acesso ao BD"};
+        else
+          response = {"alunos": data};
+          res.json(response);
+        }
+      )
     }
   )
-  .delete(function(req, res) {   // DELETE (remove)
-      response = {"deleted": "false"};
-      id = parseInt(req.params.id);
-      if(expenses.length > id && JSON.stringify(expenses[id]) != '{}') {
-         expenses[id] = {};
-         response = {"deleted": "true"};
-      }
-      res.json(response);
+  .post(function(req, res) {   // POST (cria)
+     console.log(JSON.stringify(req.body));
+     var query = {"ra": req.body.ra};
+     var response = {};
+     mongoOp.findOne(query, function(erro, data) {
+        if (data == null) {
+           var db = new mongoOp();
+           db.ra = req.body.ra;
+           db.nome = req.body.nome;
+           db.curso = req.body.curso;
+           db.save(function(erro) {
+             if(erro) {
+                 response = {"resultado": "Falha de insercao no BD"};
+                 res.json(response);
+             } else {
+                 response = {"resultado": "Aluno inserido no BD"};
+                 res.json(response);
+              }
+            }
+          )
+        } else {
+	    response = {"resultado": "Aluno ja existente"};
+            res.json(response);
+          }
+        }
+      )
     }
   );
 
 
-router.route('/groups')   // operacoes sobre todos os users
-    .get(function(req, res) {  // GET
-        if (groups.length == 0) {
-         res.json({"groups": []});
-         return;
+router.route('/alunos/:ra')   // operacoes sobre um aluno (RA)
+  .get(function(req, res) {   // GET
+      var response = {};
+      var query = {"ra": req.params.ra};
+      mongoOp.findOne(query, function(erro, data) {
+         if(erro) {
+            response = {"resultado": "falha de acesso ao BD"};
+            res.json(response);
+         } else if (data == null) {
+             response = {"resultado": "aluno inexistente"};
+             res.json(response);   
+	 } else {
+	    response = {"alunos": [data]};
+            res.json(response);
+           }
         }
-        var response = '{"groups": [';
-        var group;
-        for (var i = 0; i < groups.length; i++) {
-           group = JSON.stringify(groups[i]);   // JSON -> string
-           if (group != '{}')   // deletado ?
-              response = response + group + ',';
+      )
+    }
+  )
+  .put(function(req, res) {   // PUT (altera)
+      var response = {};
+      var query = {"ra": req.params.ra};
+      var data = {"nome": req.body.nome, "curso": req.body.curso};
+      mongoOp.findOneAndUpdate(query, data, function(erro, data) {
+          if(erro) {
+            response = {"resultado": "falha de acesso ao DB"};
+            res.json(response);
+	  } else if (data == null) { 
+             response = {"resultado": "aluno inexistente"};
+             res.json(response);   
+          } else {
+             response = {"resultado": "aluno atualizado no BD"};
+             res.json(response);   
+	  }
         }
-        if (response[response.length-1] == ',')
-           response = response.substr(0, response.length-1);  // remove ultima ,
-        response = response + ']}';  // fecha array
-        res.send(response);
-        }
-     )
-    .post(function(req, res) {   // POST
-        id = groups.length;
-
-        if (verifyUsers(req.body['members']) == 1){
-          groups[id] = req.body;    // armazena em JSON
-          response = {"id": id};
-          res.json(response);
-        } else{
-          res.send("Alguns dos usuários não é cadastrado");
-        }
-      }
-   );
-
-  router.route('/groups/:id')   // operacoes sobre um aluno (ID)
-    .get(function(req, res) {   // GET
-        response = '{}';
-        id = parseInt(req.params.id);
-        if(groups.length > id)
-          response = JSON.stringify(groups[id]);
-        res.send(response);
-        }
-    )
-    .put(function(req, res) {   // PUT (altera)
-        response = {"updated": "false"};
-        id = parseInt(req.params.id);
-        if(groups.length > id) {
-           groups[id] = req.body;
-           response = {"updated": "true"};
-        }
-        res.json(response);
-      }
-    )
-    .delete(function(req, res) {   // DELETE (remove)
-        response = {"deleted": "false"};
-        id = parseInt(req.params.id);
-        if(groups.length > id && JSON.stringify(groups[id]) != '{}') {
-           groups[id] = {};
-           response = {"deleted": "true"};
-        }
-        res.json(response);
-      }
-    );
+      )
+    }
+  )
+  .delete(function(req, res) {   // DELETE (remove)
+     var response = {};
+     var query = {"ra": req.params.ra};
+      mongoOp.findOneAndRemove(query, function(erro, data) {
+         if(erro) {
+            response = {"resultado": "falha de acesso ao DB"};
+            res.json(response);
+	 } else if (data == null) {	      
+             response = {"resultado": "aluno inexistente"};
+             res.json(response);
+            } else {
+              response = {"resultado": "aluno removido do BD"};
+              res.json(response);
+	   }
+         }
+       )
+     }
+  );
 
 
-router.route('/users')   // operacoes sobre todos os users
-    .get(function(req, res) {  // GET
-        if (users.length == 0) {
-         res.json({"users": []});
-         return;
-        }
-        var response = '{"users": [';
-        var aluno;
-        for (var i = 0; i < users.length; i++) {
-           aluno = JSON.stringify(users[i]);   // JSON -> string
-           if (aluno != '{}')   // deletado ?
-              response = response + aluno + ',';
-        }
-        if (response[response.length-1] == ',')
-           response = response.substr(0, response.length-1);  // remove ultima ,
-        response = response + ']}';  // fecha array
-        res.send(response);
-        }
-     )
-    .post(function(req, res) {   // POST (cria)
-        id = users.length;
-
-        if (verifyUsers(req.body['email']) == 0){
-          users[id] = req.body;    // armazena em JSON
-          response = {"id": id};
-          console.log(response);
-          res.json(response);
-        } else{
-          res.send("Usuário já cadastrado!");
-        }
-      }
-   );
-
-  router.route('/users/:id')   // operacoes sobre um aluno (ID)
-    .get(function(req, res) {   // GET
-        response = '{}';
-        id = parseInt(req.params.id);
-        if(users.length > id)
-          response = JSON.stringify(users[id]);
-        res.send(response);
-        }
-    )
-    .put(function(req, res) {   // PUT (altera)
-        response = {"updated": "false"};
-        id = parseInt(req.params.id);
-        if(users.length > id) {
-           users[id] = req.body;
-           response = {"updated": "true"};
-        }
-        res.json(response);
-      }
-    )
-    .delete(function(req, res) {   // DELETE (remove)
-        response = {"deleted": "false"};
-        id = parseInt(req.params.id);
-        if(users.length > id && JSON.stringify(users[id]) != '{}') {
-           users[id] = {};
-           response = {"deleted": "true"};
-        }
-        res.json(response);
-      }
-    );
