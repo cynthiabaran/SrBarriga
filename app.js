@@ -192,7 +192,8 @@ router.route('/groups')   // operacoes sobre todos os alunos
       var db = new groupsDB();
       db.admin = req.body.admin;
       db.nome = req.body.nome;
-      db.id = ObjectId();
+      // db.id = ObjectId();
+
       db.membros = req.body.membros;
 
       db.save(function(erro) {
@@ -211,7 +212,7 @@ router.route('/groups')   // operacoes sobre todos os alunos
 router.route('/groups/:id')
   .get(function(req, res) {   // GET
       var response = {};
-      var query = {"id": req.params.id};
+      var query = {"_id": req.params.id};
       groupsDB.findOne(query, function(erro, data) {
           if(erro) {
             response = {"resultado": "falha de acesso ao BD"};
@@ -230,7 +231,7 @@ router.route('/groups/:id')
 
   .put(function(req, res) {   // PUT (altera)
       var response = {};
-      var query = {"id": req.params.id};
+      var query = {"_id": req.params.id};
       var data = {"nome": req.body.name, "membros": req.body.membros, "admin": req.body.admin};
       groupsDB.findOneAndUpdate(query, data, function(erro, data) {
           if(erro) {
@@ -250,7 +251,22 @@ router.route('/groups/:id')
   .delete(function(req, res) {   // DELETE (remove)
       //Necessário remover as despesas do grupo também
        var response = {};
-       var query = {"id": req.params.id};
+       var query = {"groupID": req.params.id};
+
+        // remove spendings do grupo do db de spendings
+       spendingsDB.remove(query, function(erro, data) {
+          if(erro) {
+            response = {"resultado": "falha de acesso ao DB"};
+            res.json(response);
+          } else if (data == null) {
+            response = {"resultado": "grupo inexistente"};
+            res.json(response);
+          }
+        }
+      )
+
+      // remove group do db de grupo
+      query = {"_id": req.params.id};
        groupsDB.findOneAndRemove(query, function(erro, data) {
           if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
@@ -267,12 +283,25 @@ router.route('/groups/:id')
     }
   );
 
+  router.route('/spendings')   // operacoes sobre todos os alunos
+    .get(function(req, res) {  // GET
+        var response = {};
+        spendingsDB.find({}, function(erro, data) {
+          if(erro)
+            response = {"resultado": "Falha de acesso ao BD"};
+          else
+            response = {"spendings": data};
+            res.json(response);
+          }
+        )
+      }
+    )
 
-router.route('/spendings/:groupID')
+router.route('/:groupID/spendings')
   .get(function(req, res) {   // GET
       var response = {};
       var query = {"groupID": req.params.groupID};
-      spendingsDB.findOne(query, function(erro, data) {
+      spendingsDB.find(query, function(erro, data) {
           if(erro) {
             response = {"resultado": "falha de acesso ao BD"};
             res.json(response);
@@ -291,12 +320,11 @@ router.route('/spendings/:groupID')
       console.log(JSON.stringify(req.body));
       var response = {};
       var db = new spendingsDB();
-      db.id = ObjectId();
-      db.data = db.id.getTimeStamp();
+      db.groupID = req.parameters.groupID;
+      db.data = req.body.data;
       db.pagou = req.body.pagou;
       db.valor = req.body.valor;
       db.paraQuem = req.body.paraQuem;
-      db.groupID = req.params.groupID;
 
       db.save(function(erro) {
           if(erro) {
@@ -313,12 +341,12 @@ router.route('/spendings/:groupID')
   .delete(function(req, res) {   // DELETE (remove)
        var response = {};
        var query = {"groupID": req.params.groupID};
-       spendingsDB.findOneAndRemove(query, function(erro, data) {
+       spendingsDB.remove(query, function(erro, data) {
           if(erro) {
             response = {"resultado": "falha de acesso ao DB"};
             res.json(response);
           } else if (data == null) {
-            response = {"resultado": "despesas para o grupo inexistentes"};
+          response = {"resultado": "despesas pa'ra o grupo inexistentes"};
             res.json(response);
           } else {
             response = {"resultado": "despesas do grupo removidas do BD"};
@@ -332,7 +360,7 @@ router.route('/spendings/:groupID')
   router.route('/spendings/:id')
     .get(function(req, res) {   // GET
         var response = {};
-        var query = {"id": req.params.id};
+        var query = {"_id": req.params.id};
         spendingsDB.findOne(query, function(erro, data) {
             if(erro) {
               response = {"resultado": "falha de acesso ao BD"};
@@ -350,8 +378,8 @@ router.route('/spendings/:groupID')
     )
     .put(function(req, res) {   // PUT (altera)
         var response = {};
-        var query = {"id": req.params.id};
-        var data = {"valor": req.body.name, "paraQuem": req.body.paraQuem};
+        var query = {"_id": req.params.id};
+        var data = {"pagou":req.body.pagou,"valor": req.body.valor, "paraQuem": req.body.paraQuem};
         spendingsDB.findOneAndUpdate(query, data, function(erro, data) {
             if(erro) {
               response = {"resultado": "falha de acesso ao DB"};
@@ -369,7 +397,7 @@ router.route('/spendings/:groupID')
     )
     .delete(function(req, res) {   // DELETE (remove)
          var response = {};
-         var query = {"id": req.params.id};
+         var query = {"_id": req.params.id};
          spendingsDB.findOneAndRemove(query, function(erro, data) {
             if(erro) {
               response = {"resultado": "falha de acesso ao DB"};
